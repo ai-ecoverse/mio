@@ -64,6 +64,13 @@ pub(crate) fn new_socket(domain: libc::c_int, socket_type: libc::c_int) -> io::R
         ).map_err(|errno| io::Error::from_raw_os_error(errno.raw() as i32))?
     };
 
+    unsafe {
+        let fdstat = wasi::fd_fdstat_get(socket)
+            .map_err(|errno| io::Error::from_raw_os_error(errno.raw() as i32))?;
+        wasi::fd_fdstat_set_flags(socket, fdstat.fs_flags | wasi::FDFLAGS_NONBLOCK)
+            .map_err(|errno| io::Error::from_raw_os_error(errno.raw() as i32))?;
+    }
+
     Ok(
         socket as libc::c_int
     )
